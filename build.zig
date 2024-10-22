@@ -126,7 +126,6 @@ pub fn build (builder: *std.Build) !void
 
   lib.linkLibC ();
   if (target.result.os.tag == .windows) lib.linkSystemLibrary2 ("pthread", .{ .preferred_link_mode = .Dynamic, });
-;
 
   toolbox.addHeader (lib, path.getJqSrc (), ".", &.{ ".h", ".inc", });
 
