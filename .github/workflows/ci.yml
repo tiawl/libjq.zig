@@ -50,7 +50,7 @@ jobs:
           base-devel
           git
           autoconf
-          autoconf-wrapper
+          autotools-wrappers
           automake
           libtool
         pacboy: >-
