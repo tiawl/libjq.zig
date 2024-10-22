@@ -6,7 +6,7 @@ pub fn build (builder: *std.Build) !void
   const optimize = .Debug;
 
   var exe = builder.addExecutable (.{
-    .name = "example",
+    .name = "examples",
     .root_source_file = .{ .cwd_relative = try builder.build_root.join (
       builder.allocator, &.{ "src", "main.zig", }), },
     .target = target,
