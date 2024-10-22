@@ -125,7 +125,8 @@ pub fn build (builder: *std.Build) !void
   toolbox.addInclude (lib, "jq");
 
   lib.linkLibC ();
-  if (target.result.os.tag == .windows) lib.linkSystemLibrary ("pthread");
+  if (target.result.os.tag == .windows) lib.linkSystemLibrary2 ("pthread", .{ .preferred_link_mode = .Dynamic, });
+;
 
   toolbox.addHeader (lib, path.getJqSrc (), ".", &.{ ".h", ".inc", });
 
