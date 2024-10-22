@@ -122,11 +122,6 @@ pub fn build (builder: *std.Build) !void
     .optimize = optimize,
   });
 
-  const flags = [_][] const u8
-  {
-    "-DIEEE_8087=1", "-D_GNU_SOURCE=1",
-  };
-
   toolbox.addInclude (lib, "jq");
 
   lib.linkLibC ();
@@ -137,13 +132,30 @@ pub fn build (builder: *std.Build) !void
     try std.fs.openDirAbsolute (path.getJqSrc (), .{ .iterate = true, });
   defer jq_src_dir.close ();
 
-  var it = jq_src_dir.iterate ();
-  while (try it.next ()) |*entry|
+  switch (target.result.os.tag)
   {
-    if (toolbox.isCSource (entry.name) and entry.kind == .file)
-      try toolbox.addSource (lib, path.getJqSrc (), entry.name,
-        &flags);
+    .windows => {
+      const flags = [_][] const u8 { "-DWIN32=1", };
+      var it = jq_src_dir.iterate ();
+      while (try it.next ()) |*entry|
+      {
+        if (toolbox.isCSource (entry.name) and entry.kind == .file)
+          try toolbox.addSource (lib, path.getJqSrc (), entry.name,
+            &flags);
+      }
+    },
+    else => {
+      const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", };
+      var it = jq_src_dir.iterate ();
+      while (try it.next ()) |*entry|
+      {
+        if (toolbox.isCSource (entry.name) and entry.kind == .file)
+          try toolbox.addSource (lib, path.getJqSrc (), entry.name,
+            &flags);
+      }
+    },
   }
+
 
   builder.installArtifact (lib);
 }
