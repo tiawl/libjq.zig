@@ -128,6 +128,7 @@ pub fn build (builder: *std.Build) !void
   if (target.result.os.tag == .windows)
   {
     lib.addLibraryPath (.{ .cwd_relative = "/mingw64/lib", });
+    lib.addLibraryPath (.{ .cwd_relative = "/mingw64/include", });
     lib.linkSystemLibrary2 ("pthread", .{ .preferred_link_mode = .dynamic, });
   }
 
