@@ -35,8 +35,8 @@ const Paths = struct
   }
 };
 
-fn update (builder: *std.Build, path: *const Paths,
-  dependencies: *const toolbox.Dependencies) !void
+fn update (builder: *std.Build, target: *const std.Build.ResolvedTarget,
+  path: *const Paths, dependencies: *const toolbox.Dependencies) !void
 {
   std.fs.deleteTreeAbsolute (path.getJq ()) catch |err|
   {
@@ -117,7 +117,7 @@ pub fn build (builder: *std.Build) !void
    });
 
   if (builder.option (bool, "update", "Update binding") orelse false)
-    try update (builder, &path, &dependencies);
+    try update (builder, &target, &path, &dependencies);
 
   const lib = builder.addStaticLibrary (.{
     .name = "jq",
