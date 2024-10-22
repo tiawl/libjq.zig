@@ -52,8 +52,12 @@ fn update (builder: *std.Build, path: *const Paths,
     .{ .argv = &[_][] const u8 { "git", "submodule", "update", "--init", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
     .{ .argv = &[_][] const u8 { "autoreconf", "-i", }, .cwd = path.getTmp (), });
-  try toolbox.run (builder,
-    .{ .argv = &[_][] const u8 { "./configure", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
+  if (target.result.os.tag == .windows)
+    try toolbox.run (builder,
+      .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", "--disable-shared", "--enable-static", "--enable-all-static", "CFLAGS=\"-O2 -pthread -fstack-protector-all\"", }, .cwd = path.getTmp (), });
+  else
+    try toolbox.run (builder,
+      .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
     .{ .argv = &[_][] const u8 { "make", "-j8", }, .cwd = path.getTmp (), });
 
@@ -132,30 +136,14 @@ pub fn build (builder: *std.Build) !void
     try std.fs.openDirAbsolute (path.getJqSrc (), .{ .iterate = true, });
   defer jq_src_dir.close ();
 
-  switch (target.result.os.tag)
+  const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", };
+  var it = jq_src_dir.iterate ();
+  while (try it.next ()) |*entry|
   {
-    .windows => {
-      const flags = [_][] const u8 { "-DWIN32=1", };
-      var it = jq_src_dir.iterate ();
-      while (try it.next ()) |*entry|
-      {
-        if (toolbox.isCSource (entry.name) and entry.kind == .file)
-          try toolbox.addSource (lib, path.getJqSrc (), entry.name,
-            &flags);
-      }
-    },
-    else => {
-      const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", };
-      var it = jq_src_dir.iterate ();
-      while (try it.next ()) |*entry|
-      {
-        if (toolbox.isCSource (entry.name) and entry.kind == .file)
-          try toolbox.addSource (lib, path.getJqSrc (), entry.name,
-            &flags);
-      }
-    },
+    if (toolbox.isCSource (entry.name) and entry.kind == .file)
+      try toolbox.addSource (lib, path.getJqSrc (), entry.name,
+        &flags);
   }
-
 
   builder.installArtifact (lib);
 }
