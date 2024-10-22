@@ -28,9 +28,9 @@ const ExitCode = enum (i8)
 
 pub fn main () !void
 {
-  //var arena = std.heap.ArenaAllocator.init (std.heap.page_allocator);
-  //defer arena.deinit ();
-  //const allocator = arena.allocator ();
+  var arena = std.heap.ArenaAllocator.init (std.heap.page_allocator);
+  defer arena.deinit ();
+  const allocator = arena.allocator ();
 
   var ret = ExitCode.JQ_OK_NO_OUTPUT;
   var jq = c.jq_init ();
@@ -57,19 +57,23 @@ pub fn main () !void
   defer c.jq_util_input_free (&input_state);
   c.jq_set_input_cb (jq, c.jq_util_input_next_input_cb, input_state);
 
-  const program = ".Volumes[] + { something: \"blabla\"}";
-  const compiled = c.jq_compile_args (jq, program, c.jv_array ());//try allocator.dupeZ (u8, program));
+  const program = ".data[].firstName";
+  const compiled = c.jq_compile (jq, try allocator.dupeZ (u8, program));
 
   if (compiled == 0) return error.JqCompileError;
 
   c.jq_start (jq, data, 0);
 
   var result = c.jq_next (jq);
+  var printable_res: [*c] const u8 = undefined;
   defer c.jv_free (result);
 
-  c.jv_show (result, c.JV_PRINT_COLOR | c.JV_PRINT_SPACE1 | c.JV_PRINT_PRETTY | c.JV_PRINT_ISATTY);
-
-  while (c.jv_is_valid (result) != 0) result = c.jq_next (jq);
+  while (c.jv_is_valid (result) != 0)
+  {
+    printable_res = c.jv_string_value (c.jv_dump_string (result, c.JV_PRINT_COLOR | c.JV_PRINT_SPACE1 | c.JV_PRINT_PRETTY | c.JV_PRINT_ISATTY));
+    std.debug.print ("{s}\n", .{ printable_res, });
+    result = c.jq_next (jq);
+  }
 
   if (c.jq_halted (jq) != 0)
   {
