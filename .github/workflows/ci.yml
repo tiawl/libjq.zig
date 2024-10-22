@@ -19,7 +19,8 @@ jobs:
     - uses: mlugg/setup-zig@v1
       with:
         version: ${{ env.zig_version }}
-    - shell: bash
+    - if: matrix.os == 'windows-latest'
+      shell: bash
       run: |
         git clone https://github.com/jqlang/jq test
         env -C ./test git submodule update --init
