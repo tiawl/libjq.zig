@@ -6,7 +6,7 @@ on:
       - trunk
 
 jobs:
-  examples_linux:
+  linux:
     runs-on: ubuntu-latest
     steps:
     - uses: tiawl/spaceporn-action-env@v1.0.3
@@ -22,7 +22,7 @@ jobs:
       shell: bash
       run:
         env -C ./examples ./zig-out/bin/examples
-  examples_windows:
+  windows:
     strategy:
       fail-fast: false
       matrix:
@@ -41,8 +41,7 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    - if: matrix.os == 'windows-latest'
-      uses: msys2/setup-msys2@v2
+    - uses: msys2/setup-msys2@v2
       with:
         update: true
         msystem: ${{ matrix.msystem }}
@@ -54,8 +53,7 @@ jobs:
           libtool
         pacboy: >-
           toolchain:p
-    - if: matrix.os == 'windows-latest'
-      shell: bash
+    - shell: bash
       run: |
         git clone https://github.com/jqlang/jq test
         env -C ./test git submodule update --init
