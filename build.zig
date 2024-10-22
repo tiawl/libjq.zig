@@ -54,7 +54,7 @@ fn update (builder: *std.Build, path: *const Paths,
     .{ .argv = &[_][] const u8 { "autoreconf", "-i", }, .cwd = path.getTmp (), });
   if (target.result.os.tag == .windows)
     try toolbox.run (builder,
-      .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", "--disable-shared", "--enable-static", "--enable-all-static", "CFLAGS=\"-O2 -pthread -fstack-protector-all\"", }, .cwd = path.getTmp (), });
+      .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", "--disable-shared", "--enable-static", "--enable-all-static", "CFLAGS=\"-O2 -pthread -fstack-protector-all\"", }, .cwd = path.getTmp (), })
   else
     try toolbox.run (builder,
       .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
