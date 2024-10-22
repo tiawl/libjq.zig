@@ -26,4 +26,4 @@ jobs:
     - name: Run examples
       shell: bash
       run:
-        ./examples/zig-out/bin/examples
+        env -C ./examples ./zig-out/bin/examples
