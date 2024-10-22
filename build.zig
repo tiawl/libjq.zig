@@ -35,8 +35,8 @@ const Paths = struct
   }
 };
 
-fn update (builder: *std.Build, target: *const std.Build.ResolvedTarget,
-  path: *const Paths, dependencies: *const toolbox.Dependencies) !void
+fn update (builder: *std.Build, path: *const Paths,
+  dependencies: *const toolbox.Dependencies) !void
 {
   std.fs.deleteTreeAbsolute (path.getJq ()) catch |err|
   {
@@ -52,12 +52,8 @@ fn update (builder: *std.Build, target: *const std.Build.ResolvedTarget,
     .{ .argv = &[_][] const u8 { "git", "submodule", "update", "--init", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
     .{ .argv = &[_][] const u8 { "autoreconf", "-i", }, .cwd = path.getTmp (), });
-  if (target.result.os.tag == .windows)
-    try toolbox.run (builder,
-      .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", "--disable-shared", "--enable-static", "--enable-all-static", "CFLAGS=\"-O2 -pthread -fstack-protector-all\"", }, .cwd = path.getTmp (), })
-  else
-    try toolbox.run (builder,
-      .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
+  try toolbox.run (builder,
+    .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
     .{ .argv = &[_][] const u8 { "make", "-j8", }, .cwd = path.getTmp (), });
 
@@ -117,7 +113,7 @@ pub fn build (builder: *std.Build) !void
    });
 
   if (builder.option (bool, "update", "Update binding") orelse false)
-    try update (builder, &target, &path, &dependencies);
+    try update (builder, &path, &dependencies);
 
   const lib = builder.addStaticLibrary (.{
     .name = "jq",
@@ -129,6 +125,7 @@ pub fn build (builder: *std.Build) !void
   toolbox.addInclude (lib, "jq");
 
   lib.linkLibC ();
+  if (target.result.os.tag == .windows) lib.linkSystemLibrary ("pthread");
 
   toolbox.addHeader (lib, path.getJqSrc (), ".", &.{ ".h", ".inc", });
 

@@ -1,1 +1,1 @@
-#define JQ_CONFIG "--with-oniguruma=builtin"
+#define JQ_CONFIG "--disable-docs --disable-valgrind --with-oniguruma=builtin"
