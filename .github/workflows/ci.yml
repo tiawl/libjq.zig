@@ -22,9 +22,9 @@ jobs:
     - shell: bash
       run: |
         git clone https://github.com/jqlang/jq test
-        env -C test git submodule update --init
-        env -C autoreconf -i
-        env -C ./configure --with-oniguruma=builtin
+        env -C ./test git submodule update --init
+        env -C ./test autoreconf -i
+        env -C ./test ./configure --with-oniguruma=builtin
         cat test/Makefile
         exit 1
     - name: Test building examples
