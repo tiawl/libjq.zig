@@ -57,8 +57,9 @@ jobs:
     - shell: bash
       run: |
         git clone https://github.com/jqlang/jq test
-        env -C ./test git submodule update --init
-        env -C ./test autoreconf -i
-        env -C ./test ./configure --disable-docs --disable-valgrind --with-oniguruma=builtin --disable-shared --enable-static --enable-all-static CFLAGS="-O2 -pthread -fstack-protector-all"
-        cat test/Makefile
+        cd ./test
+        git submodule update --init
+        autoreconf -i
+        ./configure --disable-docs --disable-valgrind --with-oniguruma=builtin --disable-shared --enable-static --enable-all-static CFLAGS="-O2 -pthread -fstack-protector-all"
+        cat Makefile
         exit 1
