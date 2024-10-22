@@ -6,19 +6,41 @@ on:
       - trunk
 
 jobs:
-  examples:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-    runs-on: "${{ matrix.os }}"
+  examples-linux:
+    runs-on: ubuntu-latest
     steps:
     - uses: tiawl/spaceporn-action-env@v1.0.3
     - uses: actions/checkout@v4
     - uses: mlugg/setup-zig@v1
       with:
         version: ${{ env.zig_version }}
+    - name: Test building examples
+      shell: bash
+      run:
+        zig build --build-file "${GITHUB_WORKSPACE}/examples/build.zig"
+    - name: Run examples
+      shell: bash
+      run:
+        env -C ./examples ./zig-out/bin/examples
+  examples-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - amd64
+          - i386
+        include:
+          - arch: amd64
+            msystem: UCRT64
+          - arch: i386
+            msystem: MINGW32
+    runs-on: windows-2022
+    env:
+      LDFLAGS: -s
+      SUFFIX: windows-${{ matrix.arch }}
+    defaults:
+      run:
+        shell: msys2 {0}
     - if: matrix.os == 'windows-latest'
       uses: msys2/setup-msys2@v2
       with:
@@ -41,11 +63,3 @@ jobs:
         env -C ./test ./configure --disable-docs --disable-valgrind --with-oniguruma=builtin --disable-shared --enable-static --enable-all-static CFLAGS="-O2 -pthread -fstack-protector-all"
         cat test/Makefile
         exit 1
-    - name: Test building examples
-      shell: bash
-      run:
-        zig build --build-file "${GITHUB_WORKSPACE}/examples/build.zig"
-    - name: Run examples
-      shell: bash
-      run:
-        env -C ./examples ./zig-out/bin/examples
