@@ -1,17 +1,44 @@
 const std = @import ("std");
 const toolbox = @import ("toolbox");
 
-fn update (builder: *std.Build, jq_path: [] const u8,
+const Paths = struct
+{
+  // prefixed attributes
+  __tmp: [] const u8 = undefined,
+  __tmp_src: [] const u8 = undefined,
+  __jq: [] const u8 = undefined,
+  __jq_src: [] const u8 = undefined,
+
+  // mandatory getters
+  pub fn getTmp (self: @This ()) [] const u8 { return self.__tmp; }
+  pub fn getTmpSrc (self: @This ()) [] const u8 { return self.__tmp_src; }
+  pub fn getJq (self: @This ()) [] const u8 { return self.__jq; }
+  pub fn getJqSrc (self: @This ()) [] const u8 { return self.__jq_src; }
+
+  // mandatory init
+  pub fn init (builder: *std.Build) !@This ()
+  {
+    var self = @This ()
+    {
+      .__jq = try builder.build_root.join (builder.allocator,
+        &.{ "jq", }),
+      .__tmp = try builder.build_root.join (builder.allocator,
+        &.{ "tmp", }),
+    };
+
+    self.__jq_src = try std.fs.path.join (builder.allocator,
+      &.{ self.getJq (), "src", });
+    self.__tmp_src = try std.fs.path.join (builder.allocator,
+      &.{ self.getTmp (), "src", });
+
+    return self;
+  }
+};
+
+fn update (builder: *std.Build, path: *const Paths,
   dependencies: *const toolbox.Dependencies) !void
 {
-  const tmp_path =
-    try builder.build_root.join (builder.allocator, &.{ "tmp", });
-  const src_path =
-    try std.fs.path.join (builder.allocator, &.{ tmp_path, "src", });
-  const jq_src_path =
-    try std.fs.path.join (builder.allocator, &.{ jq_path, "src", });
-
-  std.fs.deleteTreeAbsolute (jq_path) catch |err|
+  std.fs.deleteTreeAbsolute (path.getJq ()) catch |err|
   {
     switch (err)
     {
@@ -20,40 +47,44 @@ fn update (builder: *std.Build, jq_path: [] const u8,
     }
   };
 
-  try dependencies.clone (builder, "jq", tmp_path);
+  try dependencies.clone (builder, "jq", path.getTmp ());
   try toolbox.run (builder,
-    .{ .argv = &[_][] const u8 { "git", "submodule", "update", "--init", }, .cwd = tmp_path, });
+    .{ .argv = &[_][] const u8 { "git", "submodule", "update", "--init", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
-    .{ .argv = &[_][] const u8 { "autoreconf", "-i", }, .cwd = tmp_path, });
+    .{ .argv = &[_][] const u8 { "autoreconf", "-i", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
-    .{ .argv = &[_][] const u8 { "./configure", "--with-oniguruma=builtin", }, .cwd = tmp_path, });
+    .{ .argv = &[_][] const u8 { "./configure", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
-    .{ .argv = &[_][] const u8 { "make", "-j8", }, .cwd = tmp_path, });
+    .{ .argv = &[_][] const u8 { "make", "-j8", }, .cwd = path.getTmp (), });
 
-  var src_dir = try std.fs.openDirAbsolute (src_path,
+  try toolbox.make (path.getJq ());
+  try toolbox.make (path.getJqSrc ());
+
+  var src_dir = try std.fs.openDirAbsolute (path.getTmpSrc (),
     .{ .iterate = true, });
   defer src_dir.close ();
 
   var walker = try src_dir.walk (builder.allocator);
   defer walker.deinit ();
 
-  try toolbox.make (jq_path);
-  try toolbox.make (jq_src_path);
-
   while (try walker.next ()) |*entry|
   {
     const dest = try std.fs.path.join (builder.allocator,
-      &.{ jq_src_path, entry.path, });
+      &.{ path.getJqSrc (), entry.path, });
     switch (entry.kind)
     {
       .file => try toolbox.copy (try std.fs.path.join (builder.allocator,
-        &.{ src_path, entry.path, }), dest),
+        &.{ path.getTmpSrc (), entry.path, }), dest),
       .directory => try toolbox.make (dest),
       else => return error.UnexpectedEntryKind,
     }
   }
 
-  try std.fs.deleteTreeAbsolute (tmp_path);
+  try std.fs.deleteTreeAbsolute (path.getTmp ());
+  try std.fs.deleteTreeAbsolute (try std.fs.path.join (builder.allocator,
+      &.{ path.getJqSrc (), "inject_errors.c", }));
+  try std.fs.deleteTreeAbsolute (try std.fs.path.join (builder.allocator,
+      &.{ path.getJqSrc (), "main.c", }));
 
   try toolbox.clean (builder, &.{ "jq", }, &.{ ".inc", });
 }
@@ -63,8 +94,7 @@ pub fn build (builder: *std.Build) !void
   const target = builder.standardTargetOptions (.{});
   const optimize = builder.standardOptimizeOption (.{});
 
-  const jq_path =
-    try builder.build_root.join (builder.allocator, &.{ "jq", });
+  const path = try Paths.init (builder);
 
   const dependencies = try toolbox.Dependencies.init (builder, "libjq.zig",
   &.{ "jq", },
@@ -83,39 +113,36 @@ pub fn build (builder: *std.Build) !void
    });
 
   if (builder.option (bool, "update", "Update binding") orelse false)
-    try update (builder, jq_path, &dependencies);
+    try update (builder, &path, &dependencies);
 
   const lib = builder.addStaticLibrary (.{
-    .name = "libjq",
+    .name = "jq",
     .root_source_file = builder.addWriteFiles ().add ("empty.c", ""),
     .target = target,
     .optimize = optimize,
   });
 
-  var flags = try std.BoundedArray ([] const u8, 16).init (0);
-
-  var jq_dir =
-    try std.fs.openDirAbsolute (jq_path, .{ .iterate = true, });
-  defer jq_dir.close ();
-
-  var it = jq_dir.iterate ();
-  while (try it.next ()) |*entry|
+  const flags = [_][] const u8
   {
-    if (entry.kind == .directory)
-    {
-      toolbox.addHeader (lib, try std.fs.path.join (builder.allocator,
-        &.{ jq_path, entry.name, }), entry.name, &.{ ".h", ".inc", });
-    }
-  }
+    "-DIEEE_8087=1", "-D_GNU_SOURCE=1",
+  };
+
+  toolbox.addInclude (lib, "jq");
 
   lib.linkLibC ();
 
-  it = jq_dir.iterate ();
+  toolbox.addHeader (lib, path.getJqSrc (), ".", &.{ ".h", ".inc", });
+
+  var jq_src_dir =
+    try std.fs.openDirAbsolute (path.getJqSrc (), .{ .iterate = true, });
+  defer jq_src_dir.close ();
+
+  var it = jq_src_dir.iterate ();
   while (try it.next ()) |*entry|
   {
     if (toolbox.isCSource (entry.name) and entry.kind == .file)
-      try toolbox.addSource (lib, "jq", entry.name,
-        flags.slice ());
+      try toolbox.addSource (lib, path.getJqSrc (), entry.name,
+        &flags);
   }
 
   builder.installArtifact (lib);
