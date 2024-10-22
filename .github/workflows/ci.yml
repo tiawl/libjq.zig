@@ -20,12 +20,25 @@ jobs:
       with:
         version: ${{ env.zig_version }}
     - if: matrix.os == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        msystem: ${{ matrix.msystem }}
+        install: >-
+          base-devel
+          git
+          autoconf
+          automake
+          libtool
+        pacboy: >-
+          toolchain:p
+    - if: matrix.os == 'windows-latest'
       shell: bash
       run: |
         git clone https://github.com/jqlang/jq test
         env -C ./test git submodule update --init
         env -C ./test autoreconf -i
-        env -C ./test ./configure --with-oniguruma=builtin
+        env -C ./test ./configure --disable-docs --disable-valgrind --with-oniguruma=builtin --disable-shared --enable-static --enable-all-static CFLAGS="-O2 -pthread -fstack-protector-all"
         cat test/Makefile
         exit 1
     - name: Test building examples
