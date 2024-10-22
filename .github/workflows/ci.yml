@@ -42,6 +42,14 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+    - name: Prepare git config
+      run: git config --system core.autocrlf false
+      shell: bash
+    - name: Clone repository
+      uses: actions/checkout@v4
+      with:
+        repository: jqlang/jq
+        submodules: true
     - uses: msys2/setup-msys2@v2
       with:
         update: true
@@ -50,16 +58,11 @@ jobs:
           base-devel
           git
           autoconf
-          autotools-wrappers
           automake
           libtool
         pacboy: >-
           toolchain:p
-    - shell: bash
-      run: |
-        git clone https://github.com/jqlang/jq test
-        cd ./test
-        git submodule update --init
+    - run: |
         autoreconf -i
         ./configure --disable-docs --disable-valgrind --with-oniguruma=builtin --disable-shared --enable-static --enable-all-static CFLAGS="-O2 -pthread -fstack-protector-all"
         cat Makefile
