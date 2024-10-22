@@ -6,7 +6,7 @@ on:
       - trunk
 
 jobs:
-  examples-linux:
+  examples_linux:
     runs-on: ubuntu-latest
     steps:
     - uses: tiawl/spaceporn-action-env@v1.0.3
@@ -22,7 +22,7 @@ jobs:
       shell: bash
       run:
         env -C ./examples ./zig-out/bin/examples
-  examples-windows:
+  examples_windows:
     strategy:
       fail-fast: false
       matrix:
