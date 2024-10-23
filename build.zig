@@ -137,7 +137,6 @@ pub fn build (builder: *std.Build) !void
     }
     lib.linkLibrary (pthreads);
     lib.linkSystemLibrary ("shlwapi");
-    lib.librarySy
   }
 
   lib.linkLibC ();
