@@ -136,6 +136,8 @@ pub fn build (builder: *std.Build) !void
       lib.root_module.include_dirs.append (builder.allocator, include) catch {};
     }
     lib.linkLibrary (pthreads);
+    lib.linkSystemLibrary ("shlwapi");
+    lib.librarySy
   }
 
   lib.linkLibC ();
