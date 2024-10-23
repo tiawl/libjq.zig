@@ -124,13 +124,21 @@ pub fn build (builder: *std.Build) !void
 
   toolbox.addInclude (lib, "jq");
 
-  lib.linkLibC ();
-  if (target.result.os.tag == .windows)
+  if (lib.rootModuleTarget ().isMinGW ())
   {
-    //lib.addLibraryPath (.{ .cwd_relative = "/mingw64/lib", });
-    //lib.addLibraryPath (.{ .cwd_relative = "/mingw64/include", });
-    lib.linkSystemLibrary2 ("pthread", .{ .preferred_link_mode = .static, });
+    const winpthreads_dep = builder.dependency ("winpthreads", .{
+      .target = target,
+      .optimize = optimize,
+    });
+    const pthreads = winpthreads_dep.artifact ("winpthreads");
+    for (pthreads.root_module.include_dirs.items) |include|
+    {
+      lib.root_module.include_dirs.append (builder.allocator, include) catch {};
+    }
+    lib.linkLibrary (pthreads);
   }
+
+  lib.linkLibC ();
 
   toolbox.addHeader (lib, path.getJqSrc (), ".", &.{ ".h", ".inc", });
 
