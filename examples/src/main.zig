@@ -70,7 +70,7 @@ pub fn main () !void
 
   while (c.jv_is_valid (result) != 0)
   {
-    printable_res = c.jv_string_value (c.jv_dump_string (result, c.JV_PRINT_COLOR | c.JV_PRINT_SPACE1 | c.JV_PRINT_PRETTY | c.JV_PRINT_ISATTY));
+    printable_res = c.jv_string_value (c.jv_dump_string (result, c.JV_PRINT_SPACE1 | c.JV_PRINT_PRETTY));
     std.debug.print ("{s}\n", .{ printable_res, });
     result = c.jq_next (jq);
   }

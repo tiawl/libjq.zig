@@ -53,7 +53,7 @@ fn update (builder: *std.Build, path: *const Paths,
   try toolbox.run (builder,
     .{ .argv = &[_][] const u8 { "autoreconf", "-i", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
-    .{ .argv = &[_][] const u8 { "./configure", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
+    .{ .argv = &[_][] const u8 { "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin", }, .cwd = path.getTmp (), });
   try toolbox.run (builder,
     .{ .argv = &[_][] const u8 { "make", "-j8", }, .cwd = path.getTmp (), });
 
@@ -122,12 +122,22 @@ pub fn build (builder: *std.Build) !void
     .optimize = optimize,
   });
 
-  const flags = [_][] const u8
-  {
-    "-DIEEE_8087=1", "-D_GNU_SOURCE=1",
-  };
-
   toolbox.addInclude (lib, "jq");
+
+  if (lib.rootModuleTarget ().isMinGW ())
+  {
+    const winpthreads_dep = builder.dependency ("winpthreads", .{
+      .target = target,
+      .optimize = optimize,
+    });
+    const pthreads = winpthreads_dep.artifact ("winpthreads");
+    for (pthreads.root_module.include_dirs.items) |include|
+    {
+      lib.root_module.include_dirs.append (builder.allocator, include) catch {};
+    }
+    lib.linkLibrary (pthreads);
+    lib.linkSystemLibrary ("shlwapi");
+  }
 
   lib.linkLibC ();
 
@@ -137,6 +147,7 @@ pub fn build (builder: *std.Build) !void
     try std.fs.openDirAbsolute (path.getJqSrc (), .{ .iterate = true, });
   defer jq_src_dir.close ();
 
+  const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", };
   var it = jq_src_dir.iterate ();
   while (try it.next ()) |*entry|
   {
