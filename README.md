@@ -30,8 +30,9 @@ These repositories are automatically updated when a new release is available:
 This repository is automatically updated when a new release is available from these repositories:
 * [jqlang/jq][1]
 * [tiawl/toolbox][3]
+* [tiawl/spaceporn-action-env][8]
 * [tiawl/spaceporn-action-bot][4]
-* [tiawl/spaceporn-action-ci][5]
+* [tiawl/spaceporn-action-ci][5] (TODO)
 * [tiawl/spaceporn-action-cd-ping][6] (TODO)
 * [tiawl/spaceporn-action-cd-pong][7]
 
@@ -55,3 +56,4 @@ The unprotected parts of this repository are dedicated to the public domain. See
 [5]:https://github.com/tiawl/spaceporn-action-ci
 [6]:https://github.com/tiawl/spaceporn-action-cd-ping
 [7]:https://github.com/tiawl/spaceporn-action-cd-pong
+[8]:https://github.com/tiawl/spaceporn-action-env
