@@ -13,8 +13,8 @@
             .hash = "122037046680450473adc3670f08c8695638d05f07c00be18e94ff3f7e21edf9ed9e",
         },
         .winpthreads = .{
-            .url = "git+https://github.com/kassane/winpthreads-zigbuild#28bd4f1a8e8b0ec84b18fde2fed54c457860e19c",
-            .hash = "1220bfa3c86c51e0b6df2339e2ffa376bb38df161a48a1108b093ed592a8a3e91e9d",
+            .url = "https://github.com/kassane/winpthreads-zigbuild/archive/909ce0eacf5513be493837d13f2ef84f935bf9a8.tar.gz",
+            .hash = "1220c08bf3c940723ee12a0c14bb761cb14c63bdae54ce34d47450eed168daa62780",
         },
     },
 }

@@ -104,6 +104,11 @@ pub fn build (builder: *std.Build) !void
        .host = toolbox.Repository.Host.github,
        .ref = toolbox.Repository.Reference.tag,
      },
+     .winpthreads = .{
+       .name = "kassane/winpthreads-zigbuild",
+       .host = toolbox.Repository.Host.github,
+       .ref = toolbox.Repository.Reference.commit,
+     },
    }, .{
      .jq = .{
        .name = "jqlang/jq",
