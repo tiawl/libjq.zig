@@ -147,7 +147,7 @@ pub fn build (builder: *std.Build) !void
     }
     lib.linkLibrary (pthreads);
     lib.linkSystemLibrary ("shlwapi");
-    lib.linkSystemLibrary ("ntdll32");
+    lib.linkSystemLibrary ("ntdll");
   }
 
   const oniguruma_dep = builder.dependency ("oniguruma", .{
