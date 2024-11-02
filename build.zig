@@ -104,6 +104,11 @@ pub fn build (builder: *std.Build) !void
        .host = toolbox.Repository.Host.github,
        .ref = toolbox.Repository.Reference.tag,
      },
+     .oniguruma = .{
+       .name = "tiawl/oniguruma.zig",
+       .host = toolbox.Repository.Host.github,
+       .ref = toolbox.Repository.Reference.tag,
+     },
      .winpthreads = .{
        .name = "kassane/winpthreads-zigbuild",
        .host = toolbox.Repository.Host.github,
@@ -143,6 +148,14 @@ pub fn build (builder: *std.Build) !void
     lib.linkLibrary (pthreads);
     lib.linkSystemLibrary ("shlwapi");
   }
+
+  const oniguruma_dep = builder.dependency ("oniguruma", .{
+    .target = target,
+    .optimize = optimize,
+  });
+
+  lib.linkLibrary (oniguruma_dep.artifact ("oniguruma"));
+  lib.installLibraryHeaders (oniguruma_dep.artifact ("oniguruma"));
 
   lib.linkLibC ();
 
