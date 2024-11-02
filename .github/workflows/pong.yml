@@ -4,6 +4,7 @@ on:
   repository_dispatch:
     types:
       - ping-from-toolbox
+      - ping-from-oniguruma.zig
       - ping-from-spaceporn-action-bot
       - ping-from-spaceporn-action-ci
       - ping-from-spaceporn-action-cd-pong

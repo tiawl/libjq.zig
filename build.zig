@@ -104,6 +104,11 @@ pub fn build (builder: *std.Build) !void
        .host = toolbox.Repository.Host.github,
        .ref = toolbox.Repository.Reference.tag,
      },
+     .oniguruma = .{
+       .name = "tiawl/oniguruma.zig",
+       .host = toolbox.Repository.Host.github,
+       .ref = toolbox.Repository.Reference.commit,
+     },
      .winpthreads = .{
        .name = "kassane/winpthreads-zigbuild",
        .host = toolbox.Repository.Host.github,
@@ -144,6 +149,14 @@ pub fn build (builder: *std.Build) !void
     lib.linkSystemLibrary ("shlwapi");
   }
 
+  const oniguruma_dep = builder.dependency ("oniguruma", .{
+    .target = target,
+    .optimize = optimize,
+  });
+
+  lib.linkLibrary (oniguruma_dep.artifact ("oniguruma"));
+  lib.installLibraryHeaders (oniguruma_dep.artifact ("oniguruma"));
+
   lib.linkLibC ();
 
   toolbox.addHeader (lib, path.getJqSrc (), ".", &.{ ".h", ".inc", });
@@ -152,7 +165,7 @@ pub fn build (builder: *std.Build) !void
     try std.fs.openDirAbsolute (path.getJqSrc (), .{ .iterate = true, });
   defer jq_src_dir.close ();
 
-  const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", };
+  const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", "-DHAVE_LIBONIG=1" };
   var it = jq_src_dir.iterate ();
   while (try it.next ()) |*entry|
   {
