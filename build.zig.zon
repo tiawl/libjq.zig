@@ -13,8 +13,8 @@
             .hash = "122037046680450473adc3670f08c8695638d05f07c00be18e94ff3f7e21edf9ed9e",
         },
         .oniguruma = .{
-            .url = "https://github.com/tiawl/oniguruma.zig/archive/25212e0001e0d306be035101b2a25f4d4a84566e.tar.gz",
-            .hash = "1220d04c95aca104aeaacef9a1cfa9915e108cd500f586dcb597d6363da5fc660643",
+            .url = "https://github.com/tiawl/oniguruma.zig/archive/refs/tags/v6.9.9.tar.gz",
+            .hash = "1220901998824e7f2ba9469c64caa8841993d7a9fce51309db50b818af2f1b60bd5d",
         },
         .winpthreads = .{
             .url = "https://github.com/kassane/winpthreads-zigbuild/archive/909ce0eacf5513be493837d13f2ef84f935bf9a8.tar.gz",
