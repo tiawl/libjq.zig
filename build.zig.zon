@@ -14,7 +14,7 @@
         },
         .oniguruma = .{
             .url = "https://github.com/tiawl/oniguruma.zig/archive/refs/tags/v6.9.9.tar.gz",
-            .hash = "122097484728355a27363a73fae37541d9c088e0ef94846e90ba07490228b506376c",
+            .hash = "12204a9aa8048018590055f92675b3ba783e396a6517701c4c8cfe8f92f34d3c67e7",
         },
         .winpthreads = .{
             .url = "https://github.com/kassane/winpthreads-zigbuild/archive/909ce0eacf5513be493837d13f2ef84f935bf9a8.tar.gz",
