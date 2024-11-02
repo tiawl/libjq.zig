@@ -57,7 +57,7 @@ pub fn main () !void
   defer c.jq_util_input_free (&input_state);
   c.jq_set_input_cb (jq, c.jq_util_input_next_input_cb, input_state);
 
-  const program = ".data[].firstName";
+  const program = ".data[].firstName | sub(\"Sher\"; \"Un\")";
   const compiled = c.jq_compile (jq, try allocator.dupeZ (u8, program));
 
   if (compiled == 0) return error.JqCompileError;

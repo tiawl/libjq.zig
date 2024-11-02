@@ -165,7 +165,7 @@ pub fn build (builder: *std.Build) !void
     try std.fs.openDirAbsolute (path.getJqSrc (), .{ .iterate = true, });
   defer jq_src_dir.close ();
 
-  const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", };
+  const flags = [_][] const u8 { "-DIEEE_8087=1", "-D_GNU_SOURCE=1", "-DHAVE_LIBONIG=1" };
   var it = jq_src_dir.iterate ();
   while (try it.next ()) |*entry|
   {
