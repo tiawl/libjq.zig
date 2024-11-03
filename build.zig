@@ -107,7 +107,7 @@ pub fn build (builder: *std.Build) !void
      .oniguruma = .{
        .name = "tiawl/oniguruma.zig",
        .host = toolbox.Repository.Host.github,
-       .ref = toolbox.Repository.Reference.commit,
+       .ref = toolbox.Repository.Reference.tag,
      },
      .winpthreads = .{
        .name = "kassane/winpthreads-zigbuild",
