@@ -13,7 +13,7 @@
             .hash = "122037046680450473adc3670f08c8695638d05f07c00be18e94ff3f7e21edf9ed9e",
         },
         .oniguruma = .{
-            .url = "https://github.com/tiawl/oniguruma.zig/archive/refs/tags/v6.9.9.tar.gz",
+            .url = "https://github.com/tiawl/oniguruma.zig/archive/4a5d0816aa77215640465a3c5785cb39e11ff677.tar.gz",
             .hash = "1220901998824e7f2ba9469c64caa8841993d7a9fce51309db50b818af2f1b60bd5d",
         },
         .winpthreads = .{
