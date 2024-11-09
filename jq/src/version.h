@@ -1,1 +1,1 @@
-#define JQ_VERSION "1.7.1-69-g562d5c5"
+#define JQ_VERSION "1.7.1-74-geb9bdca"
