@@ -9,7 +9,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: tiawl/spaceporn-action-env@v1.0.3
+    - uses: tiawl/spaceporn-action-env@v1.0.4
     - uses: actions/checkout@v4
     - uses: mlugg/setup-zig@v1
       with:
@@ -39,7 +39,7 @@ jobs:
 #     run:
 #       shell: msys2 {0}
 #   steps:
-#   - uses: tiawl/spaceporn-action-env@v1.0.3
+#   - uses: tiawl/spaceporn-action-env@v1.0.4
 #   - uses: actions/checkout@v4
 #   - uses: mlugg/setup-zig@v1
 #     with:
