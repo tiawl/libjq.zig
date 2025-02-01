@@ -326,16 +326,16 @@
 #define PACKAGE_NAME "jq"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "jq 1.7.1-92-gdea5e61"
+#define PACKAGE_STRING "jq 1.7.1-95-gd0adcbf"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "jq"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://jqlang.github.io/jq"
+#define PACKAGE_URL "https://jqlang.org"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.7.1-92-gdea5e61"
+#define PACKAGE_VERSION "1.7.1-95-gd0adcbf"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -446,7 +446,7 @@
 
 
 /* Version number of package */
-#define VERSION "1.7.1-92-gdea5e61"
+#define VERSION "1.7.1-95-gd0adcbf"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
