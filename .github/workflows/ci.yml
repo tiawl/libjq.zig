@@ -5,15 +5,17 @@ on:
     branches:
       - trunk
 
+env:
+  ZIG_VERSION: "0.13.0"
+
 jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: tiawl/spaceporn-action-env@v1.0.3
     - uses: actions/checkout@v4
     - uses: mlugg/setup-zig@v1
       with:
-        version: ${{ env.zig_version }}
+        version: ${{ env.ZIG_VERSION }}
     - name: Test building examples
       shell: bash
       run: |
