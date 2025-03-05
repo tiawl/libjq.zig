@@ -5,24 +5,12 @@
 # define _XPG6
 # define __EXTENSIONS__
 #endif
+#ifdef __OpenBSD__
+# define _BSD_SOURCE
+#endif
 #include <sys/time.h>
 #include <stdlib.h>
 #include <stddef.h>
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#elif !defined alloca
-# ifdef __GNUC__
-#  define alloca __builtin_alloca
-# elif defined _MSC_VER
-#  include <malloc.h>
-#  define alloca _alloca
-# elif !defined HAVE_ALLOCA
-#  ifdef  __cplusplus
-extern "C"
-#  endif
-void *alloca (size_t);
-# endif
-#endif
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h>
@@ -340,21 +328,10 @@ jv binop_multiply(jv a, jv b) {
       str = b;
       num = a;
     }
-    jv res;
     double d = jv_number_value(num);
-    if (d < 0 || isnan(d)) {
-      res = jv_null();
-    } else {
-      int n = d;
-      size_t alen = jv_string_length_bytes(jv_copy(str));
-      res = jv_string_empty(alen * n);
-      for (; n > 0; n--) {
-        res = jv_string_append_buf(res, jv_string_value(str), alen);
-      }
-    }
-    jv_free(str);
     jv_free(num);
-    return res;
+    return jv_string_repeat(str,
+        d < 0 || isnan(d) ? -1 : d > INT_MAX ? INT_MAX : (int)d);
   } else if (ak == JV_KIND_OBJECT && bk == JV_KIND_OBJECT) {
     return jv_object_merge_recursive(a, b);
   } else {
@@ -494,7 +471,7 @@ static jv f_length(jq_state *jq, jv input) {
   } else if (jv_get_kind(input) == JV_KIND_STRING) {
     return jv_number(jv_string_length_codepoints(input));
   } else if (jv_get_kind(input) == JV_KIND_NUMBER) {
-    jv r = jv_number(fabs(jv_number_value(input)));
+    jv r = jv_number_abs(input);
     jv_free(input);
     return r;
   } else if (jv_get_kind(input) == JV_KIND_NULL) {
@@ -757,9 +734,12 @@ static jv f_format(jq_state *jq, jv input, jv fmt) {
     input = f_tostring(jq, input);
     const unsigned char* data = (const unsigned char*)jv_string_value(input);
     int len = jv_string_length_bytes(jv_copy(input));
+    if (len == 0) {
+      jv_free(input);
+      return jv_string("");
+    }
     size_t decoded_len = (3 * (size_t)len) / 4; // 3 usable bytes for every 4 bytes of input
     char *result = jv_mem_calloc(decoded_len, sizeof(char));
-    memset(result, 0, decoded_len * sizeof(char));
     uint32_t ri = 0;
     int input_bytes_read=0;
     uint32_t code = 0;
@@ -874,6 +854,24 @@ static jv f_group_by_impl(jq_state *jq, jv input, jv keys) {
       jv_get_kind(keys) == JV_KIND_ARRAY &&
       jv_array_length(jv_copy(input)) == jv_array_length(jv_copy(keys))) {
     return jv_group(input, keys);
+  } else {
+    return type_error2(input, keys, "cannot be sorted, as they are not both arrays");
+  }
+}
+
+static jv f_unique(jq_state *jq, jv input) {
+  if (jv_get_kind(input) == JV_KIND_ARRAY) {
+    return jv_unique(input, jv_copy(input));
+  } else {
+    return type_error(input, "cannot be sorted, as it is not an array");
+  }
+}
+
+static jv f_unique_by_impl(jq_state *jq, jv input, jv keys) {
+  if (jv_get_kind(input) == JV_KIND_ARRAY &&
+      jv_get_kind(keys) == JV_KIND_ARRAY &&
+      jv_array_length(jv_copy(input)) == jv_array_length(jv_copy(keys))) {
+    return jv_unique(input, keys);
   } else {
     return type_error2(input, keys, "cannot be sorted, as they are not both arrays");
   }
@@ -1758,8 +1756,8 @@ static jv f_strftime(jq_state *jq, jv a, jv b) {
     return ret_error(b, jv_string("strftime/1 requires parsed datetime inputs"));
 
   const char *fmt = jv_string_value(b);
-  size_t alloced = strlen(fmt) + 100;
-  char *buf = alloca(alloced);
+  size_t max_size = strlen(fmt) + 100;
+  char *buf = jv_mem_alloc(max_size);
 #ifdef __APPLE__
   /* Apple Libc (as of version 1669.40.2) contains a bug which causes it to
    * ignore the `tm.tm_gmtoff` in favor of the global timezone. To print the
@@ -1767,7 +1765,7 @@ static jv f_strftime(jq_state *jq, jv a, jv b) {
   char *tz = (tz = getenv("TZ")) != NULL ? strdup(tz) : NULL;
   setenv("TZ", "UTC", 1);
 #endif
-  size_t n = strftime(buf, alloced, fmt, &tm);
+  size_t n = strftime(buf, max_size, fmt, &tm);
 #ifdef __APPLE__
   if (tz) {
     setenv("TZ", tz, 1);
@@ -1778,9 +1776,13 @@ static jv f_strftime(jq_state *jq, jv a, jv b) {
 #endif
   jv_free(b);
   /* POSIX doesn't provide errno values for strftime() failures; weird */
-  if (n == 0 || n > alloced)
+  if ((n == 0 && *fmt) || n > max_size) {
+    free(buf);
     return jv_invalid_with_msg(jv_string("strftime/1: unknown system failure"));
-  return jv_string(buf);
+  }
+  jv ret = jv_string_sized(buf, n);
+  free(buf);
+  return ret;
 }
 #else
 static jv f_strftime(jq_state *jq, jv a, jv b) {
@@ -1803,14 +1805,18 @@ static jv f_strflocaltime(jq_state *jq, jv a, jv b) {
   if (!jv2tm(a, &tm, 1))
     return ret_error(b, jv_string("strflocaltime/1 requires parsed datetime inputs"));
   const char *fmt = jv_string_value(b);
-  size_t alloced = strlen(fmt) + 100;
-  char *buf = alloca(alloced);
-  size_t n = strftime(buf, alloced, fmt, &tm);
+  size_t max_size = strlen(fmt) + 100;
+  char *buf = jv_mem_alloc(max_size);
+  size_t n = strftime(buf, max_size, fmt, &tm);
   jv_free(b);
   /* POSIX doesn't provide errno values for strftime() failures; weird */
-  if (n == 0 || n > alloced)
+  if ((n == 0 && *fmt) || n > max_size) {
+    free(buf);
     return jv_invalid_with_msg(jv_string("strflocaltime/1: unknown system failure"));
-  return jv_string(buf);
+  }
+  jv ret = jv_string_sized(buf, n);
+  free(buf);
+  return ret;
 }
 #else
 static jv f_strflocaltime(jq_state *jq, jv a, jv b) {
@@ -1912,6 +1918,8 @@ BINOPS
   CFUNC(f_sort, "sort", 1),
   CFUNC(f_sort_by_impl, "_sort_by_impl", 2),
   CFUNC(f_group_by_impl, "_group_by_impl", 2),
+  CFUNC(f_unique, "unique", 1),
+  CFUNC(f_unique_by_impl, "_unique_by_impl", 2),
   CFUNC(f_bsearch, "bsearch", 2),
   CFUNC(f_min, "min", 1),
   CFUNC(f_max, "max", 1),

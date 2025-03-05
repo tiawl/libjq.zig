@@ -585,6 +585,11 @@ static jv jvp_literal_number_new(const char * literal) {
     return JV_INVALID;
   }
   if (decNumberIsNaN(&n->num_decimal)) {
+    // Reject NaN with payload.
+    if (n->num_decimal.digits > 1 || *n->num_decimal.lsu != 0) {
+      jv_mem_free(n);
+      return JV_INVALID;
+    }
     jv_mem_free(n);
     return jv_number(NAN);
   }
@@ -730,6 +735,21 @@ int jvp_number_is_nan(jv n) {
   }
 #endif
   return isnan(n.u.number);
+}
+
+jv jv_number_abs(jv n) {
+  assert(JVP_HAS_KIND(n, JV_KIND_NUMBER));
+
+#ifdef USE_DECNUM
+  if (JVP_HAS_FLAGS(n, JVP_FLAGS_NUMBER_LITERAL)) {
+    jvp_literal_number* m = jvp_literal_number_alloc(jvp_dec_number_ptr(n)->digits);
+
+    decNumberAbs(&m->num_decimal, jvp_dec_number_ptr(n), DEC_CONTEXT());
+    jv r = {JVP_FLAGS_NUMBER_LITERAL, 0, 0, 0, {&m->refcnt}};
+    return r;
+  }
+#endif
+  return jv_number(fabs(jv_number_value(n)));
 }
 
 jv jv_number_negate(jv n) {
@@ -1307,6 +1327,32 @@ jv jv_string_indexes(jv j, jv k) {
   jv_free(j);
   jv_free(k);
   return a;
+}
+
+jv jv_string_repeat(jv j, int n) {
+  assert(JVP_HAS_KIND(j, JV_KIND_STRING));
+  if (n < 0) {
+    jv_free(j);
+    return jv_null();
+  }
+  int len = jv_string_length_bytes(jv_copy(j));
+  int64_t res_len = (int64_t)len * n;
+  if (res_len >= INT_MAX) {
+    jv_free(j);
+    return jv_invalid_with_msg(jv_string("Repeat string result too long"));
+  }
+  if (res_len == 0) {
+    jv_free(j);
+    return jv_string("");
+  }
+  jv res = jv_string_empty(res_len);
+  res = jvp_string_append(res, jv_string_value(j), len);
+  for (int curr = len, grow; curr < res_len; curr += grow) {
+    grow = MIN(res_len - curr, curr);
+    res = jvp_string_append(res, jv_string_value(res), grow);
+  }
+  jv_free(j);
+  return res;
 }
 
 jv jv_string_split(jv j, jv sep) {
