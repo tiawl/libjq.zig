@@ -6,6 +6,7 @@
 #include "bytecode.h"
 #include "locfile.h"
 #include "jv_alloc.h"
+#include "util.h"
 
 /*
   The intermediate representation for jq filters is as a sequence of
@@ -843,46 +844,26 @@ block gen_reduce(block source, block matcher, block init, block body) {
 }
 
 block gen_foreach(block source, block matcher, block init, block update, block extract) {
-  block output = gen_op_targetlater(JUMP);
   block state_var = gen_op_var_fresh(STOREV, "foreach");
-  block loop = BLOCK(gen_op_simple(DUPN),
-                     // get a value from the source expression:
-                     source,
-                     // destructure the value into variable(s) for all the code
-                     // in the body to see
-                     bind_alternation_matchers(matcher,
-                                  // load the loop state variable
-                                  BLOCK(gen_op_bound(LOADV, state_var),
-                                        // generate updated state
-                                        update,
-                                        // save the updated state for value extraction
-                                        gen_op_simple(DUP),
-                                        // save new state
-                                        gen_op_bound(STOREV, state_var),
-                                        // extract an output...
-                                        extract,
-                                        // ...and output it by jumping
-                                        // past the BACKTRACK that comes
-                                        // right after the loop body,
-                                        // which in turn is there
-                                        // because...
-                                        //
-                                        // (Incidentally, extract can also
-                                        // backtrack, e.g., if it calls
-                                        // empty, in which case we don't
-                                        // get here.)
-                                        output)));
-  block foreach = BLOCK(gen_op_simple(DUP),
-                        init,
-                        state_var,
-                        gen_op_target(FORK, loop),
-                        loop,
-                        // ...at this point `foreach`'s original input
-                        // will be on top of the stack, and we don't
-                        // want to output it, so we backtrack.
-                        gen_op_simple(BACKTRACK));
-  inst_set_target(output, foreach); // make that JUMP go bast the BACKTRACK at the end of the loop
-  return foreach;
+  return BLOCK(gen_op_simple(DUP),
+               init,
+               state_var,
+               gen_op_simple(DUP),
+               // get a value from the source expression:
+               source,
+               // destructure the value into variable(s) for all the code
+               // in the body to see
+               bind_alternation_matchers(matcher,
+                            // load the loop state variable
+                            BLOCK(gen_op_bound(LOADV, state_var),
+                                  // generate updated state
+                                  update,
+                                  // save the updated state for value extraction
+                                  gen_op_simple(DUP),
+                                  // save new state
+                                  gen_op_bound(STOREV, state_var),
+                                  // extract an output...
+                                  extract)));
 }
 
 block gen_definedor(block a, block b) {
@@ -1372,7 +1353,7 @@ int block_compile(block b, struct bytecode** out, struct locfile* lf, jv args) {
   bc->globals = jv_mem_alloc(sizeof(struct symbol_table));
   int ncfunc = count_cfunctions(b);
   bc->globals->ncfunctions = 0;
-  bc->globals->cfunctions = jv_mem_calloc(ncfunc ? ncfunc : 1, sizeof(struct cfunction));
+  bc->globals->cfunctions = jv_mem_calloc(MAX(ncfunc, 1), sizeof(struct cfunction));
   bc->globals->cfunc_names = jv_array();
   bc->debuginfo = jv_object_set(jv_object(), jv_string("name"), jv_null());
   jv env = jv_invalid();
