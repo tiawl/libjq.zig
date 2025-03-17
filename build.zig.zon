@@ -1,24 +1,25 @@
 .{
-    .name = "libjq.zig",
+    .name = .libjq_zig,
     .version = "1.0.0",
-    .minimum_zig_version = "0.13.0",
+    .dependencies = .{
+        .toolbox = .{
+            .url = "git+https://github.com/tiawl/toolbox#02bb0af6ca24b747ca9de17325e8b422d9b5de2c",
+            .hash = "toolbox-1.11.2-kRAu4CVLAAC8cC-LITQL_lNOAKx1v9t6VTWfq1Q4uiJR",
+        },
+        .winpthreads = .{
+            .url = "git+https://github.com/tiawl/winpthreads-zigbuild#4b084f4d40b69138ec2658b9935c22a4bebad4b9",
+            .hash = "winpthreads-10.0.0-AAAAAL70IgDZhBwNfL9pXqEFnApa-v8vCDbOJ_u_-jIL",
+        },
+        .oniguruma_zig = .{
+            .url = "git+https://github.com/tiawl/oniguruma.zig#4a7edda3e5c0b6819a395941732bdb74f5ae4c47",
+            .hash = "oniguruma_zig-1.0.0-rVWSTQb0IQCYvYfNApDmyWh6UxasotEnbqJGm8VKbgiA",
+        },
+    },
+    .minimum_zig_version = "0.14.0",
+    .fingerprint = 0x4fefb366172605fb,
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "jq",
-    },
-    .dependencies = .{
-        .toolbox = .{
-            .url = "https://github.com/tiawl/toolbox/archive/refs/tags/1.11.2.tar.gz",
-            .hash = "122037046680450473adc3670f08c8695638d05f07c00be18e94ff3f7e21edf9ed9e",
-        },
-        .oniguruma = .{
-            .url = "https://github.com/tiawl/oniguruma.zig/archive/refs/tags/v6.9.10.tar.gz",
-            .hash = "1220196f0701302a66cd35da9b9072beeff59053fa11c591f564102475207014c596",
-        },
-        .winpthreads = .{
-            .url = "https://github.com/kassane/winpthreads-zigbuild/archive/cece22286c045e6280b182c73c15342376b9cb30.tar.gz",
-            .hash = "12200d56958ce15df8e3d6eee74cb5be7f57fa7ca2af19ef3925ff47be6a17c484d1",
-        },
     },
 }
