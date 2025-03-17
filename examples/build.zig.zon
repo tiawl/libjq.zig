@@ -1,8 +1,9 @@
 .{
-    .name = "examples",
+    .name = .examples,
     .version = "1.0.0",
+    .fingerprint = 0x7bd0ad45bb771c94,
     .dependencies = .{
-        .@"libjq.zig" = .{
+        .libjq_zig = .{
             .path = "..",
         },
     },
