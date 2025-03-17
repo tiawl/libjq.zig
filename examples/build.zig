@@ -16,7 +16,7 @@ pub fn build(builder: *std.Build) !void {
         .optimize = optimize,
     });
 
-    var jq_dep = builder.dependency("libjq.zig", .{
+    var jq_dep = builder.dependency("libjq_zig", .{
         .target = target,
         .optimize = optimize,
     });

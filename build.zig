@@ -138,21 +138,22 @@ pub fn build(builder: *std.Build) !void {
 
     const path = try Paths.init(builder);
 
-    const dependencies = try toolbox.Dependencies.init(builder, "libjq.zig", &.{
+    const dependencies = try toolbox.Dependencies.init(builder, .libjq_zig, "0x4fefb366172605fb", &.{
         "jq",
     }, .{
         .toolbox = .{
             .name = "tiawl/toolbox",
             .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.tag,
+            .ref = toolbox.Repository.Reference.commit,
         },
-        .oniguruma = .{
+        .oniguruma_zig = .{
             .name = "tiawl/oniguruma.zig",
             .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.tag,
+            .ref = toolbox.Repository.Reference.commit,
         },
         .winpthreads = .{
-            .name = "kassane/winpthreads-zigbuild",
+            // .name = "kassane/winpthreads-zigbuild",
+            .name = "tiawl/winpthreads-zigbuild",
             .host = toolbox.Repository.Host.github,
             .ref = toolbox.Repository.Reference.commit,
         },
@@ -189,7 +190,7 @@ pub fn build(builder: *std.Build) !void {
         lib.linkSystemLibrary("shlwapi");
     }
 
-    const oniguruma_dep = builder.dependency("oniguruma", .{
+    const oniguruma_dep = builder.dependency("oniguruma_zig", .{
         .target = target,
         .optimize = optimize,
     });
