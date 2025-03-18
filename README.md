@@ -30,12 +30,7 @@ These repositories are automatically updated when a new release is available:
 This repository is automatically updated when a new release is available from these repositories:
 * [jqlang/jq][1]
 * [tiawl/toolbox][3]
-* [tiawl/oniguruma.zig][9]
-* [tiawl/spaceporn-action-env][8]
-* [tiawl/spaceporn-action-bot][4]
-* [tiawl/spaceporn-action-ci][5] (TODO)
-* [tiawl/spaceporn-action-cd-ping][6] (TODO)
-* [tiawl/spaceporn-action-cd-pong][7]
+* [tiawl/oniguruma.zig][4]
 
 ## `zig build` options
 
@@ -56,9 +51,4 @@ The parts of this repository originated from this repository are dedicated to th
 [1]:https://github.com/jqlang/jq
 [2]:https://github.com/ziglang/zig
 [3]:https://github.com/tiawl/toolbox
-[4]:https://github.com/tiawl/spaceporn-action-bot
-[5]:https://github.com/tiawl/spaceporn-action-ci
-[6]:https://github.com/tiawl/spaceporn-action-cd-ping
-[7]:https://github.com/tiawl/spaceporn-action-cd-pong
-[8]:https://github.com/tiawl/spaceporn-action-env
-[9]:https://github.com/tiawl/oniguruma.zig
+[4]:https://github.com/tiawl/oniguruma.zig
