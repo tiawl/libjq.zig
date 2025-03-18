@@ -152,8 +152,7 @@ pub fn build(builder: *std.Build) !void {
             .ref = toolbox.Repository.Reference.commit,
         },
         .winpthreads = .{
-            // .name = "kassane/winpthreads-zigbuild",
-            .name = "tiawl/winpthreads-zigbuild",
+            .name = "kassane/winpthreads-zigbuild",
             .host = toolbox.Repository.Host.github,
             .ref = toolbox.Repository.Reference.commit,
         },
