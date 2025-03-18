@@ -6,10 +6,6 @@
             .url = "git+https://github.com/tiawl/toolbox#02bb0af6ca24b747ca9de17325e8b422d9b5de2c",
             .hash = "toolbox-1.11.2-kRAu4CVLAAC8cC-LITQL_lNOAKx1v9t6VTWfq1Q4uiJR",
         },
-        .winpthreads = .{
-            .url = "git+https://github.com/kassane/winpthreads-zigbuild#5a616f1044b5c610edaa390c389c264f316fb7e9",
-            .hash = "winpthreads-10.0.0-AAAAAOb0IgBCJLeN7KuDRqQp_r2mgjwX4jX_022uCYNF",
-        },
         .oniguruma_zig = .{
             .url = "git+https://github.com/tiawl/oniguruma.zig#4a7edda3e5c0b6819a395941732bdb74f5ae4c47",
             .hash = "oniguruma_zig-1.0.0-rVWSTQb0IQCYvYfNApDmyWh6UxasotEnbqJGm8VKbgiA",

@@ -151,11 +151,6 @@ pub fn build(builder: *std.Build) !void {
             .host = toolbox.Repository.Host.github,
             .ref = toolbox.Repository.Reference.commit,
         },
-        .winpthreads = .{
-            .name = "kassane/winpthreads-zigbuild",
-            .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.commit,
-        },
     }, .{
         .jq = .{
             .name = "jqlang/jq",
@@ -177,15 +172,6 @@ pub fn build(builder: *std.Build) !void {
     toolbox.addInclude(lib, "jq");
 
     if (lib.rootModuleTarget().isMinGW()) {
-        const winpthreads_dep = builder.dependency("winpthreads", .{
-            .target = target,
-            .optimize = optimize,
-        });
-        const pthreads = winpthreads_dep.artifact("winpthreads");
-        for (pthreads.root_module.include_dirs.items) |include| {
-            lib.root_module.include_dirs.append(builder.allocator, include) catch {};
-        }
-        lib.linkLibrary(pthreads);
         lib.linkSystemLibrary("shlwapi");
     }
 
