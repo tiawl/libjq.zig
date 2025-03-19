@@ -144,12 +144,12 @@ pub fn build(builder: *std.Build) !void {
         .toolbox = .{
             .name = "tiawl/toolbox",
             .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.commit,
+            .ref = toolbox.Repository.Reference.tag,
         },
         .oniguruma_zig = .{
             .name = "tiawl/oniguruma.zig",
             .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.commit,
+            .ref = toolbox.Repository.Reference.tag,
         },
     }, .{
         .jq = .{
