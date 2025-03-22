@@ -49,11 +49,11 @@ const Paths = struct {
 fn update(builder: *std.Build, path: *const Paths, dependencies: *const toolbox.Dependencies) !void {
     std.fs.deleteTreeAbsolute(path.getJq()) catch |err|
         {
-        switch (err) {
-            error.FileNotFound => {},
-            else => return err,
-        }
-    };
+            switch (err) {
+                error.FileNotFound => {},
+                else => return err,
+            }
+        };
 
     try dependencies.clone(builder, "jq", path.getTmp());
     try toolbox.run(builder, .{
@@ -192,8 +192,8 @@ pub fn build(builder: *std.Build) !void {
 
     var jq_src_dir =
         try std.fs.openDirAbsolute(path.getJqSrc(), .{
-        .iterate = true,
-    });
+            .iterate = true,
+        });
     defer jq_src_dir.close();
 
     const flags = [_][]const u8{ "-DIEEE_8087=1", "-D_GNU_SOURCE=1", "-DHAVE_LIBONIG=1" };
