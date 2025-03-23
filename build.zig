@@ -24,20 +24,20 @@ const Paths = struct {
     }
 
     fn init() !@This() {
-        const jq_path = try toolbox.instance().getBuilder().build_root.join(toolbox.instance().getBuilder().allocator, &.{
+        const jq_path = try toolbox.instance().buildRootJoin(&.{
             "jq",
         });
-        const tmp_path = try toolbox.instance().getBuilder().build_root.join(toolbox.instance().getBuilder().allocator, &.{
+        const tmp_path = try toolbox.instance().buildRootJoin(&.{
             "tmp",
         });
 
         return .{
             .__jq = jq_path,
             .__tmp = tmp_path,
-            .__jq_src = toolbox.instance().ptrBuilder().pathJoin(&.{
+            .__jq_src = toolbox.instance().pathJoin(&.{
                 jq_path, "src",
             }),
-            .__tmp_src = toolbox.instance().ptrBuilder().pathJoin(&.{
+            .__tmp_src = toolbox.instance().pathJoin(&.{
                 tmp_path, "src",
             }),
         };
@@ -52,7 +52,7 @@ fn update(path: *const Paths) !void {
         }
     };
 
-    try toolbox.instance().clone("jq", path.getTmp());
+    try toolbox.instance().clone(.jq, path.getTmp());
     try toolbox.instance().run(.{
         .argv = &[_][]const u8{
             "git", "submodule", "update", "--init",
@@ -90,11 +90,11 @@ fn update(path: *const Paths) !void {
     defer walker.deinit();
 
     while (try walker.next()) |*entry| {
-        const dest = toolbox.instance().ptrBuilder().pathJoin(&.{
+        const dest = toolbox.instance().pathJoin(&.{
             path.getJqSrc(), entry.path,
         });
         switch (entry.kind) {
-            .file => try toolbox.instance().copy(toolbox.instance().ptrBuilder().pathJoin(&.{
+            .file => try toolbox.instance().copy(toolbox.instance().pathJoin(&.{
                 path.getTmpSrc(), entry.path,
             }), dest),
             .directory => try toolbox.instance().make(dest),
@@ -103,10 +103,10 @@ fn update(path: *const Paths) !void {
     }
 
     try std.fs.deleteTreeAbsolute(path.getTmp());
-    try std.fs.deleteTreeAbsolute(toolbox.instance().ptrBuilder().pathJoin(&.{
+    try std.fs.deleteTreeAbsolute(toolbox.instance().pathJoin(&.{
         path.getJqSrc(), "inject_errors.c",
     }));
-    try std.fs.deleteTreeAbsolute(toolbox.instance().ptrBuilder().pathJoin(&.{
+    try std.fs.deleteTreeAbsolute(toolbox.instance().pathJoin(&.{
         path.getJqSrc(), "main.c",
     }));
 
@@ -155,9 +155,9 @@ pub fn build(builder: *std.Build) !void {
 
     if (toolbox.instance().getUpdate()) try update(&path);
 
-    const lib = toolbox.instance().ptrBuilder().addStaticLibrary(.{
+    const lib = builder.addStaticLibrary(.{
         .name = "jq",
-        .root_source_file = toolbox.instance().ptrBuilder().addWriteFiles().add("empty.c", ""),
+        .root_source_file = builder.addWriteFiles().add("empty.c", ""),
         .target = target,
         .optimize = optimize,
     });
@@ -168,7 +168,7 @@ pub fn build(builder: *std.Build) !void {
         lib.linkSystemLibrary("shlwapi");
     }
 
-    const oniguruma_dep = toolbox.instance().ptrBuilder().dependency("oniguruma_zig", .{
+    const oniguruma_dep = builder.dependency("oniguruma_zig", .{
         .target = target,
         .optimize = optimize,
     });
@@ -197,5 +197,5 @@ pub fn build(builder: *std.Build) !void {
         }
     }
 
-    toolbox.instance().ptrBuilder().installArtifact(lib);
+    builder.installArtifact(lib);
 }
