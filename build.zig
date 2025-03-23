@@ -44,7 +44,7 @@ const Paths = struct {
     }
 };
 
-fn update(path: *const Paths, dependencies: *const toolbox.Dependencies) !void {
+fn update(path: *const Paths) !void {
     std.fs.deleteTreeAbsolute(path.getJq()) catch |err| {
         switch (err) {
             error.FileNotFound => {},
@@ -52,7 +52,7 @@ fn update(path: *const Paths, dependencies: *const toolbox.Dependencies) !void {
         }
     };
 
-    try dependencies.clone("jq", path.getTmp());
+    try toolbox.instance().clone("jq", path.getTmp());
     try toolbox.instance().run(.{
         .argv = &[_][]const u8{
             "git", "submodule", "update", "--init",
@@ -117,32 +117,39 @@ fn update(path: *const Paths, dependencies: *const toolbox.Dependencies) !void {
     });
 }
 
+const FromZon = toolbox.Repositories(.{
+    .toolbox, .oniguruma_zig,
+});
+
+const DuringExec = toolbox.Repositories(.{
+    .jq,
+});
+
 pub fn build(builder: *std.Build) !void {
     const target = builder.standardTargetOptions(.{});
     const optimize = builder.standardOptimizeOption(.{});
 
-    toolbox.init(builder, optimize);
-    defer toolbox.deinit();
-    const dependencies = try toolbox.Dependencies.init(.libjq_zig, "0x4fefb366172605fb", &.{
+    try toolbox.init(FromZon, DuringExec, builder, optimize, .libjq_zig, "0x4fefb366172605fb", &.{
         "jq",
     }, .{
         .toolbox = .{
             .name = "tiawl/toolbox",
-            .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.tag,
+            .host = .github,
+            .ref = .tag,
         },
         .oniguruma_zig = .{
             .name = "tiawl/oniguruma.zig",
-            .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.tag,
+            .host = .github,
+            .ref = .tag,
         },
     }, .{
         .jq = .{
             .name = "jqlang/jq",
-            .host = toolbox.Repository.Host.github,
-            .ref = toolbox.Repository.Reference.commit,
+            .host = .github,
+            .ref = .commit,
         },
     });
+    defer toolbox.deinit();
 
     const path = try Paths.init();
 
