@@ -153,7 +153,7 @@ pub fn build(builder: *std.Build) !void {
 
     const path = try Paths.init();
 
-    if (toolbox.instance().getUpdate()) try update(&path, &dependencies);
+    if (toolbox.instance().getUpdate()) try update(&path);
 
     const lib = toolbox.instance().ptrBuilder().addStaticLibrary(.{
         .name = "jq",
