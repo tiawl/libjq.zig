@@ -7,7 +7,7 @@
             .hash = "toolbox-1.12.2-kRAu4GRZAAAiIQjk8qdsjXVdSro7DI9pI8J82LGG4k4j",
         },
         .oniguruma_zig = .{
-            .url = "git+https://github.com/tiawl/oniguruma.zig#d73618c31a0792b5ba20d18e5a6e53c0c676a01c",
+            .url = "git+https://github.com/tiawl/oniguruma.zig?ref=toolbox-1.12.2#4264b6d5f0cc6b63046a5dc21cd6592e71e9dbce",
             .hash = "oniguruma_zig-1.0.0-rVWSTWXxIQARxvej0mRmfHo0lRCWGkguWDEWdYx0wE55",
         },
     },
