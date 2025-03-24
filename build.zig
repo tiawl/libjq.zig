@@ -1,5 +1,6 @@
 const std = @import("std");
-const toolbox = @import("toolbox");
+const toolbox_pkg = @import("toolbox");
+const Toolbox = toolbox_pkg.Toolbox;
 
 const Paths = struct {
     __tmp: []const u8,
@@ -23,28 +24,28 @@ const Paths = struct {
         return self.__jq_src;
     }
 
-    fn init() !@This() {
-        const jq_path = try toolbox.instance().buildRootJoin(&.{
+    fn init(toolbox: *Toolbox) !@This() {
+        const jq_path = try toolbox.buildRootJoin(&.{
             "jq",
         });
-        const tmp_path = try toolbox.instance().buildRootJoin(&.{
+        const tmp_path = try toolbox.buildRootJoin(&.{
             "tmp",
         });
 
         return .{
             .__jq = jq_path,
             .__tmp = tmp_path,
-            .__jq_src = toolbox.instance().pathJoin(&.{
+            .__jq_src = toolbox.pathJoin(&.{
                 jq_path, "src",
             }),
-            .__tmp_src = toolbox.instance().pathJoin(&.{
+            .__tmp_src = toolbox.pathJoin(&.{
                 tmp_path, "src",
             }),
         };
     }
 };
 
-fn update(path: *const Paths) !void {
+fn update(toolbox: *Toolbox, path: *const Paths) !void {
     std.fs.deleteTreeAbsolute(path.getJq()) catch |err| {
         switch (err) {
             error.FileNotFound => {},
@@ -52,76 +53,76 @@ fn update(path: *const Paths) !void {
         }
     };
 
-    try toolbox.instance().clone(.jq, path.getTmp());
-    try toolbox.instance().run(.{
+    try toolbox.clone(.jq, path.getTmp());
+    try toolbox.run(.{
         .argv = &[_][]const u8{
             "git", "submodule", "update", "--init",
         },
         .cwd = path.getTmp(),
     });
-    try toolbox.instance().run(.{
+    try toolbox.run(.{
         .argv = &[_][]const u8{
             "autoreconf", "-i",
         },
         .cwd = path.getTmp(),
     });
-    try toolbox.instance().run(.{
+    try toolbox.run(.{
         .argv = &[_][]const u8{
             "./configure", "--disable-docs", "--disable-valgrind", "--with-oniguruma=builtin",
         },
         .cwd = path.getTmp(),
     });
-    try toolbox.instance().run(.{
+    try toolbox.run(.{
         .argv = &[_][]const u8{
             "make", "-j8",
         },
         .cwd = path.getTmp(),
     });
 
-    try toolbox.instance().make(path.getJq());
-    try toolbox.instance().make(path.getJqSrc());
+    try toolbox.make(path.getJq());
+    try toolbox.make(path.getJqSrc());
 
     var src_dir = try std.fs.openDirAbsolute(path.getTmpSrc(), .{
         .iterate = true,
     });
     defer src_dir.close();
 
-    var walker = try src_dir.walk(toolbox.instance().getBuilder().allocator);
+    var walker = try src_dir.walk(toolbox.getAllocator());
     defer walker.deinit();
 
     while (try walker.next()) |*entry| {
-        const dest = toolbox.instance().pathJoin(&.{
+        const dest = toolbox.pathJoin(&.{
             path.getJqSrc(), entry.path,
         });
         switch (entry.kind) {
-            .file => try toolbox.instance().copy(toolbox.instance().pathJoin(&.{
+            .file => try toolbox.copy(toolbox.pathJoin(&.{
                 path.getTmpSrc(), entry.path,
             }), dest),
-            .directory => try toolbox.instance().make(dest),
+            .directory => try toolbox.make(dest),
             else => return error.UnexpectedEntryKind,
         }
     }
 
     try std.fs.deleteTreeAbsolute(path.getTmp());
-    try std.fs.deleteTreeAbsolute(toolbox.instance().pathJoin(&.{
+    try std.fs.deleteTreeAbsolute(toolbox.pathJoin(&.{
         path.getJqSrc(), "inject_errors.c",
     }));
-    try std.fs.deleteTreeAbsolute(toolbox.instance().pathJoin(&.{
+    try std.fs.deleteTreeAbsolute(toolbox.pathJoin(&.{
         path.getJqSrc(), "main.c",
     }));
 
-    try toolbox.instance().clean(&.{
+    try toolbox.clean(&.{
         "jq",
     }, &.{
         ".inc",
     });
 }
 
-const FromZon = toolbox.Repositories(.{
+const FromZon = toolbox_pkg.Repositories(.{
     .toolbox, .oniguruma_zig,
 });
 
-const DuringExec = toolbox.Repositories(.{
+const DuringExec = toolbox_pkg.Repositories(.{
     .jq,
 });
 
@@ -129,7 +130,7 @@ pub fn build(builder: *std.Build) !void {
     const target = builder.standardTargetOptions(.{});
     const optimize = builder.standardOptimizeOption(.{});
 
-    try toolbox.init(FromZon, DuringExec, builder, optimize, .libjq_zig, "0x4fefb366172605fb", &.{
+    var toolbox = try Toolbox.init(FromZon, DuringExec, builder, optimize, .libjq_zig, "0x4fefb366172605fb", &.{
         "jq",
     }, .{
         .toolbox = .{
@@ -151,9 +152,9 @@ pub fn build(builder: *std.Build) !void {
     });
     defer toolbox.deinit();
 
-    const path = try Paths.init();
+    const path = try Paths.init(&toolbox);
 
-    if (toolbox.instance().getUpdate()) try update(&path);
+    if (toolbox.getUpdate()) try update(&toolbox, &path);
 
     const lib = builder.addStaticLibrary(.{
         .name = "jq",
@@ -162,7 +163,7 @@ pub fn build(builder: *std.Build) !void {
         .optimize = optimize,
     });
 
-    toolbox.instance().addInclude(lib, "jq");
+    toolbox.addInclude(lib, "jq");
 
     if (lib.rootModuleTarget().isMinGW()) {
         lib.linkSystemLibrary("shlwapi");
@@ -178,7 +179,7 @@ pub fn build(builder: *std.Build) !void {
 
     lib.linkLibC();
 
-    toolbox.instance().addHeader(lib, path.getJqSrc(), ".", &.{
+    toolbox.addHeader(lib, path.getJqSrc(), ".", &.{
         ".h", ".inc",
     });
 
@@ -192,8 +193,8 @@ pub fn build(builder: *std.Build) !void {
     };
     var it = jq_src_dir.iterate();
     while (try it.next()) |*entry| {
-        if (toolbox.isCSource(entry.name) and entry.kind == .file) {
-            try toolbox.instance().addSource(lib, path.getJqSrc(), entry.name, &flags);
+        if (toolbox_pkg.isCSource(entry.name) and entry.kind == .file) {
+            try toolbox.addSource(lib, path.getJqSrc(), entry.name, &flags);
         }
     }
 

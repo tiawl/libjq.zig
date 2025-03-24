@@ -3,12 +3,12 @@
     .version = "1.0.0",
     .dependencies = .{
         .toolbox = .{
-            .url = "git+https://github.com/tiawl/toolbox?ref=1.12.1#ae40a89693764fbe8366c1d91188173e0cb4aecf",
-            .hash = "toolbox-1.12.0-kRAu4NpbAAD1Udg7-EaHBo3CdoO7yEV4e6obmze-rmsf",
+            .url = "git+https://github.com/tiawl/toolbox#1b417058ddd7c5c52f26621a59c9ef40780faf8b",
+            .hash = "toolbox-1.12.2-kRAu4GRZAAAiIQjk8qdsjXVdSro7DI9pI8J82LGG4k4j",
         },
         .oniguruma_zig = .{
-            .url = "git+https://github.com/tiawl/oniguruma.zig?ref=zig-0.14.0#fda3bd658affa082d955fdc18a9c797cc1aa0968",
-            .hash = "oniguruma_zig-1.0.0-rVWSTRL0IQCSvZ1TJGG8yghhByfJZnteCeZd9bpVkar0",
+            .url = "git+https://github.com/tiawl/oniguruma.zig#d73618c31a0792b5ba20d18e5a6e53c0c676a01c",
+            .hash = "oniguruma_zig-1.0.0-rVWSTWXxIQARxvej0mRmfHo0lRCWGkguWDEWdYx0wE55",
         },
     },
     .minimum_zig_version = "0.14.0",
